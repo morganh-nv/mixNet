@@ -8,7 +8,7 @@ import torch
 import subprocess
 import torch.backends.cudnn as cudnn
 import torch.utils.data as data
-from dataset import TotalText, Ctw1500Text, Icdar15Text, Mlt2017Text, TD500Text, TD500HUSTText, \
+from dataset import TotalText, Ctw1500Text, Icdar15Text, Icdar15Text_mid, Mlt2017Text, TD500Text, TD500HUSTText, \
     ArtText, ArtTextJson, Mlt2019Text, Ctw1500Text_New, TotalText_New, Ctw1500Text_mid, TotalText_mid, TD500HUSTText_mid
 from network.textnet import TextNet
 from cfglib.config import config as cfg, update_config, print_config
@@ -16,8 +16,8 @@ from cfglib.option import BaseOptions
 from util.augmentation import BaseTransform
 from util.visualize import visualize_detection, visualize_gt
 from util.misc import to_device, mkdirs,rescale_result, get_cosine_map
-# from util.eval import deal_eval_total_text, deal_eval_ctw1500, deal_eval_icdar15, \
-#     deal_eval_TD500, data_transfer_ICDAR, data_transfer_TD500, data_transfer_TD500HUST, data_transfer_MLT2017
+from util.eval import deal_eval_total_text, deal_eval_ctw1500, deal_eval_icdar15, \
+     deal_eval_TD500, data_transfer_ICDAR, data_transfer_TD500, data_transfer_TD500HUST, data_transfer_MLT2017
 
 import multiprocessing
 multiprocessing.set_start_method("spawn", force=True)
@@ -124,6 +124,14 @@ def inference(model, test_loader, output_dir):
         # cv2.drawContours(im_show, contours, -1, (0, 0, 255), 2)
         # cv2.imwrite(path, im_show)
 
+        #me add below to vis
+        path = os.path.join(cfg.vis_dir, '{}_test'.format(cfg.exp_name), meta['image_id'][idx].split(".")[0] + ".jpg")
+        im_show = img_show.copy()
+        im_show = np.ascontiguousarray(im_show[:, :, ::-1])
+        contours = data_transfer_ICDAR(contours)
+        cv2.drawContours(im_show, contours, -1, (0, 0, 255), 2)
+        cv2.imwrite(path, im_show)
+
         # empty GPU  cache
         torch.cuda.empty_cache()
 
@@ -210,6 +218,18 @@ def main(vis_dir_path):
             is_training=False,
             transform=BaseTransform(size=cfg.test_size, mean=cfg.means, std=cfg.stds)
         )
+    elif cfg.exp_name == "Icdar2015":
+        testset = Icdar15Text(
+            data_root='data/own_images',
+            is_training=False,
+            transform=BaseTransform(size=cfg.test_size, mean=cfg.means, std=cfg.stds)
+        )
+    elif cfg.exp_name == 'Icdar2015_mid':
+        testset = Icdar15Text_mid(
+            data_root='data/own_images',
+            is_training=False,
+            transform=BaseTransform(size=cfg.test_size, mean=cfg.means, std=cfg.stds)
+        )
     else:
         print("{} is not justify".format(cfg.exp_name))
 
@@ -219,8 +239,8 @@ def main(vis_dir_path):
 
     # Model
     model = TextNet(is_training=False, backbone=cfg.net)
-    model_path = os.path.join(cfg.save_dir, cfg.exp_name,
-                              'MixNet_{}_{}.pth'.format(model.backbone_name, cfg.checkepoch))
+    #model_path = os.path.join(cfg.save_dir, cfg.exp_name, 'MixNet_{}_{}.pth'.format(model.backbone_name, cfg.checkepoch))
+    model_path = "./MixNet_FSNet_M_622.pth"
 
     model.load_model(model_path)
     model.to(cfg.device)  # copy to cuda

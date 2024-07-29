@@ -28,7 +28,7 @@ class BaseOptions(object):
 
         # basic opts
         self.parser.add_argument('--exp_name', default="TD500", type=str,
-                                 choices=['Synthtext', 'Totaltext', 'Ctw1500','Icdar2015', 'Totaltext_mid', 'Ctw1500_mid','TD500HUST_mid','ArT_mid',
+                                 choices=['Synthtext', 'Totaltext', 'Ctw1500','Icdar2015','Icdar2015_mid','Totaltext_mid', 'Ctw1500_mid','TD500HUST_mid','ArT_mid',
                                           "MLT2017", 'TD500HUST', "MLT2019", "ArT", "ALL","preSynthMLT","preALL"], help='Experiment name')
         self.parser.add_argument('--resume', default=None, type=str, help='Path to target resume checkpoint')
         self.parser.add_argument('--num_workers', default=0, type=int, help='Number of workers used in dataloading')
